@@ -27,6 +27,7 @@ function ModelBox({ url, position = [0, 0, 0], scale = [1, 1, 1], rotation = [0,
 }
 
 function InteractiveScene() {
+  const refa = useRef();
   const ref = useRef();
   const scroll = useScroll();
   const [hovered, setHovered] = useState(false);
@@ -35,9 +36,13 @@ function InteractiveScene() {
   // Scroll-driven rotation
   useFrame(() => {
     const progress = scroll.range(0, 1);
+    if (refa.current) {
+        refa.current.rotation.x = progress * Math.PI * 2;
+        refa.current.rotation.y = progress * Math.PI * 2;
+    }
     if (ref.current) {
-      ref.current.rotation.x = progress * Math.PI * 2;
-      ref.current.rotation.y = progress * Math.PI * 2;
+        ref.current.rotation.x = -progress * Math.PI * 1;
+        ref.current.rotation.y = -progress * Math.PI * 1;
     }
   });
 
@@ -46,7 +51,7 @@ function InteractiveScene() {
   return (
     <>
       <ModelBox
-        url="public/models/example.glb"
+        url={`${import.meta.env.BASE_URL}models/example.glb`}
         position={[2, 0, 0]}
         scale={[0.8, 0.8, 0.8]}
         rotation={[0, Math.PI / 4, 0]}
@@ -57,7 +62,7 @@ function InteractiveScene() {
         onClick={() => console.log('Model clicked')}
       />
       <mesh
-        ref={ref}
+        ref={refa}
         position={[-2, 0, 0]}
         scale={hovered ? 1.2 : 1}
         onPointerOver={() => setHovered(true)}
@@ -76,14 +81,35 @@ function InteractiveScene() {
           </Html>
         )}
       </mesh>
+      <mesh
+        ref={ref}
+        position={[-4, 0, 0]}
+        scale={hovered ? 1.2 : 1}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onClick={() => setClicked(!clicked)}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={hovered ? 'darkblue' : clicked ? 'lightgreen' : 'gray'} />
+        {clicked && (
+          <Html position={[0, 1.2, 0]}>
+            <div style={{ color: 'white', background: 'rgba(0,0,0,0.6)', padding: '0.5rem', borderRadius: '0.25rem' }}>
+              🎉 You clicked the box!
+            </div>
+          </Html>
+        )}
+      </mesh>
       <Stats /> {/* optional performance stats */}
     </>
   );
 }
 
+
 export default function Scene() {
   return (
-    <Canvas shadows style={{width:'100vw', height: '100vh', background: '#202025' }}>
+    <Canvas>
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 5, 5]} castShadow />
       <ScrollControls pages={3} damping={4}>
